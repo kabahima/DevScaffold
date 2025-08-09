@@ -1,49 +1,49 @@
-import subprocess
-from rich import print
+import platform, shutil, subprocess
+from rich.console import Console
+import questionary
 
-def run(command):
+console = Console()
+
+OS = platform.system()
+
+def is_installed(tool):
+    return shutil.which(tool) is not None
+
+def run_install(cmd):
     try:
-        subprocess.run(command, shell=True, check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"[red]❌ Error running: {command}[/red]\n{e}")
+        subprocess.run(cmd, shell=True, check=True)
+        console.print(f"[green]Installed with: {cmd}")
+    except subprocess.CalledProcessError:
+        console.print(f"[red]Failed: {cmd}")
 
-def install_tool(tool, os_name):
-    print(f"[blue]Installing {tool}...[/blue]")
-
-    if tool == "Node.js":
-        if os_name == "windows":
-            run("choco install nodejs -y")
-        elif os_name == "linux":
-            run("curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -")
-            run("sudo apt install -y nodejs")
-        elif os_name == "darwin":
-            run("brew install node")
-
-    elif tool == "Python3":
-        if os_name == "windows":
-            run("choco install python -y")
-        elif os_name == "linux":
-            run("sudo apt install -y python3 python3-pip")
-        elif os_name == "darwin":
-            run("brew install python")
-
-    elif tool == "Git":
-        if os_name == "windows":
-            run("choco install git -y")
-        elif os_name == "linux":
-            run("sudo apt install -y git")
-        elif os_name == "darwin":
-            run("brew install git")
-
-    elif tool == "Docker":
-        if os_name == "windows":
-            run("choco install docker-desktop -y")
-        elif os_name == "linux":
-            run("sudo apt install -y docker.io")
-        elif os_name == "darwin":
-            run("brew install --cask docker")
-
+def get_install_cmd(tool):
+    if OS == "Windows":
+        return f"choco install {tool} -y"
+    elif OS == "Darwin":
+        return f"brew install {tool}"
     else:
-        print(f"[yellow]No install command defined for {tool}[/yellow]")
+        return f"sudo apt install {tool} -y"
 
-    print(f"[green]✔️ {tool} installed (or already present)[/green]\n")
+def install_tools():
+    tools = questionary.checkbox("Select tools to install:", choices=["node", "python3", "git", "docker"]).ask()
+    for tool in tools:
+        if is_installed(tool):
+            console.print(f"[yellow]{tool} already installed")
+        else:
+            run_install(get_install_cmd(tool))
+
+def install_databases():
+    dbs = questionary.checkbox("Select databases:", choices=["postgresql", "mysql", "sqlite3", "mongodb", "redis"]).ask()
+    for db in dbs:
+        if is_installed(db):
+            console.print(f"[yellow]{db} already installed")
+        else:
+            run_install(get_install_cmd(db))
+
+def install_containers():
+    tools = questionary.checkbox("Install container tools:", choices=["podman", "kubectl", "minikube", "microk8s"]).ask()
+    for tool in tools:
+        if is_installed(tool):
+            console.print(f"[yellow]{tool} already installed")
+        else:
+            run_install(get_install_cmd(tool))

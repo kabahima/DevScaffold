@@ -1,24 +1,34 @@
-import platform
 import questionary
-from devsetup.installer import install_tool
-from rich import print
+from rich.console import Console
+from devsetup.installer import install_tools, install_databases, install_containers
+from devsetup.bootstrap import scaffold_project
+
+console = Console()
 
 def main():
-    print("[bold green]🛠 DevSetup CLI Tool[/bold green]\n")
+    console.rule("[bold blue]Welcome to DevSetup CLI")
 
-    tools = questionary.checkbox(
-        "Select tools to install:",
-        choices=["Node.js", "Python3", "Git", "Docker"]
-    ).ask()
+    choices = [
+        "Install Developer Tools",
+        "Scaffold New Project",
+        "Setup Containers & Kubernetes",
+        "Install Databases",
+        "Exit"
+    ]
 
-    if not tools:
-        print("[yellow]⚠️ No tools selected. Exiting.[/yellow]")
-        return
+    while True:
+        choice = questionary.select("Choose an option:", choices=choices).ask()
+        if choice == "Install Developer Tools":
+            install_tools()
+        elif choice == "Scaffold New Project":
+            scaffold_project()
+        elif choice == "Setup Containers & Kubernetes":
+            install_containers()
+        elif choice == "Install Databases":
+            install_databases()
+        elif choice == "Exit":
+            console.print("[green]Goodbye!")
+            break
 
-    os_name = platform.system().lower()  # 'windows', 'linux', or 'darwin'
-    print(f"[cyan]Detected OS: {os_name}[/cyan]\n")
-
-    for tool in tools:
-        install_tool(tool, os_name)
-
-    print("\n[bold green]✅ Setup complete![/bold green]")
+if __name__ == "__main__":
+    main()
